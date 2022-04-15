@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     private Animator animator;
     private GroundDetector groundDetector;
     public float jumpForce;
+    public float dashForce;
     public float moveSpeed;
     private float moveInputOffset = 0.1f;
     Vector2 move;
@@ -19,8 +20,11 @@ public class PlayerController : MonoBehaviour
     public FallState fallState;
     public IdleState idleState;
     public RunState runState;
+    public DashState dashState;
     private float jumpTime = 0.1f;
     private float jumpTimer;
+    private float dashTime = 0.2f;
+    public float dashTimer;
     public int direction
     {
         set
@@ -72,6 +76,7 @@ public class PlayerController : MonoBehaviour
         }
         Debug.Log(move);
 
+        // 점프
         if (Input.GetKeyDown(KeyCode.LeftAlt))
         {
             if (groundDetector.isDetected &&
@@ -81,14 +86,27 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        // 대쉬
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            if (state != PlayerState.Dash && state == PlayerState.Run 
+                && Mathf.Abs(rb.velocity.x)<=0.1f)
+            {
+                ChangePlayerState(PlayerState.Dash);
+            }
+        }
+
+
         UpdatePlayerState();
     }
 
+    // rigid 좌표 업뎃 캐릭터 좌표 따라서
     private void FixedUpdate()
     {
         rb.position += new Vector2(move.x * moveSpeed, move.y) * Time.fixedDeltaTime; //좌표
     }
 
+    // Player 상태 머신 바꾸기
     public void ChangePlayerState(PlayerState newState)
     {
         if (state == newState) return;
@@ -97,8 +115,10 @@ public class PlayerController : MonoBehaviour
         switch (state)
         {
             case PlayerState.Idle:
+                idleState = IdleState.Idle;
                 break;
             case PlayerState.Run:
+                runState = RunState.Idle;
                 break;
             case PlayerState.Jump:
                 jumpState = JumpState.Idle;
@@ -106,10 +126,12 @@ public class PlayerController : MonoBehaviour
             case PlayerState.Fall:
                 fallState = FallState.Idle;
                 break;
+            case PlayerState.Dash:
+                dashState = DashState.Idle;
+                break;
             default:
                 break;
         }
-
 
         // 현재 상태 바꿈
         state = newState;
@@ -118,8 +140,10 @@ public class PlayerController : MonoBehaviour
         switch (state)
         {
             case PlayerState.Idle:
+                idleState = IdleState.Prepare;
                 break;
             case PlayerState.Run:
+                runState= RunState.Prepare;
                 break;
             case PlayerState.Jump:
                 jumpState = JumpState.Prepare;
@@ -127,29 +151,33 @@ public class PlayerController : MonoBehaviour
             case PlayerState.Fall:
                 fallState = FallState.Prepare;
                 break;
+            case PlayerState.Dash:
+                dashState= DashState.Prepare;
+                break;
             default:
                 break;
         }
     }
+
+    // 프레임마다 업뎃
     private void UpdatePlayerState()
     {
         switch (state)
         {
             case PlayerState.Idle:
-                animator.Play("Idle");
+                UpdateIdleState();
                 break;
             case PlayerState.Run:
-                animator.Play("Run");
+                UpdateRunState();
                 break;
             case PlayerState.Jump:
                 UpdateJumpState();
                 break;
             case PlayerState.Fall:
-                animator.Play("Fall");
-                // 끝나면 Idle 로 돌아가
-                if (groundDetector.isDetected)
-                    state = PlayerState.Idle;
-                
+                UpdateFallState();
+                break;
+            case PlayerState.Dash:
+                UpdateDashState();
                 break;
             default:
                 break;
@@ -182,7 +210,6 @@ public class PlayerController : MonoBehaviour
                 if (rb.velocity.y < 0)
                 {
                     jumpState++;
-                    UpdateFallState();
                 }
                 break;
             case JumpState.Finish:
@@ -209,10 +236,6 @@ public class PlayerController : MonoBehaviour
             case FallState.OnAction:
                 if (groundDetector.isDetected)
                     fallState++;
-                else
-                {
-                    jumpTime -= Time.deltaTime;
-                }
                 break;
             case FallState.Finish:
                 ChangePlayerState(PlayerState.Idle);
@@ -236,9 +259,10 @@ public class PlayerController : MonoBehaviour
                 idleState++;
                 break;
             case IdleState.OnAction:
-                
+                idleState++;
                 break;
             case IdleState.Finish:
+                idleState = IdleState.Idle;
                 break;
             default:
                 break;
@@ -259,10 +283,40 @@ public class PlayerController : MonoBehaviour
                 runState++;
                 break;
             case RunState.OnAction:
-                runState++;
+                if (Mathf.Abs(rb.velocity.x) <= 0.00001f)
+                    runState++;
                 break;
             case RunState.Finish:
                 ChangePlayerState(PlayerState.Idle);
+                break;
+            default:
+                break;
+        }
+    }
+    private void UpdateDashState()
+    {
+        switch (dashState)
+        {
+            case DashState.Idle:
+                break;
+            case DashState.Prepare:
+                animator.Play("Dash");
+                rb.AddForce(Vector2.right * _direction * dashForce, ForceMode2D.Impulse);
+                dashTimer = dashTime;
+                dashState++;
+                break;
+            case DashState.Casting:
+                dashState++;
+                break;
+            case DashState.OnAction:
+                if(dashTimer < 0)
+                {
+                    dashState++;
+                }
+                else dashTimer -= Time.deltaTime;
+                break;
+            case DashState.Finish:
+                ChangePlayerState(PlayerState.Run);
                 break;
             default:
                 break;
@@ -272,12 +326,15 @@ public class PlayerController : MonoBehaviour
 
 }
 
+
+
 public enum PlayerState
 {
     Idle,
     Run,
     Jump,
-    Fall
+    Fall,
+    Dash
 }
 
 
@@ -309,6 +366,15 @@ public enum IdleState
 }
 
 public enum RunState
+{
+    Idle,
+    Prepare,
+    Casting,
+    OnAction,
+    Finish
+}
+
+public enum DashState
 {
     Idle,
     Prepare,
