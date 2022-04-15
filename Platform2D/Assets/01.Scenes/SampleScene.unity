@@ -171,12 +171,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   jumpForce: 5
+  dashForce: 3.2
   moveSpeed: 1
   state: 0
   jumpState: 0
   fallState: 0
   idleState: 0
   runState: 0
+  dashState: 0
+  dashTimer: 0
 --- !u!70 &224581675
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -213,7 +216,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!114 &224581677
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -518,8 +521,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2084506331}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.07, y: -0.309, z: 0}
-  m_LocalScale: {x: 3.2425342, y: 0.22606091, z: 1}
+  m_LocalPosition: {x: 0.027, y: -0.309, z: 0}
+  m_LocalScale: {x: 8.385451, y: 0.22606091, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 2
