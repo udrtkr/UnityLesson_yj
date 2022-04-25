@@ -691,8 +691,8 @@ MonoBehaviour:
   dashAttackState: 0
   attackBoxCastCenter: {x: 0.2, y: 0}
   attackBoxCastSize: {x: 0.4, y: 0.5}
-  attackKnockbackForce: 0.5
-  attackKnockbackTime: 1
+  attackKnockbackForce: 1
+  attackKnockbackTime: 0.5
   enemyLayer:
     serializedVersion: 2
     m_Bits: 32768

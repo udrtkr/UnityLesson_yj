@@ -27,7 +27,7 @@ public class EnemyController : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();
+        animator = GetComponentInChildren<Animator>();
         //attackTime = GetAnimationTime("Attack");
         hurtTime = GetAnimationTime("Hurt");
         dieTime = GetAnimationTime("Die");
@@ -46,7 +46,7 @@ public class EnemyController : MonoBehaviour
         {
             rb.AddForce(dir * force, ForceMode2D.Force);
             timer -= Time.deltaTime;
-            yield return null; //프레임 대기
+            yield return null; //프레임 대기 후 진행 계속
         }
     }
 

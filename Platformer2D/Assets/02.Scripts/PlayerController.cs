@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     private Rigidbody2D rb;
+
     private GroundDetector groundDetector;
     private EnemyController enemyController;
     public float jumpForce;
@@ -328,13 +329,13 @@ public class PlayerController : MonoBehaviour
                 isMoveable = false;
                 animationTimer = attackTime;
                 attackState++;
+                move.x = 0;
                 break;
             case AttackState.Casting:
                 if(animationTimer < attackTime / 2)
                 {
                     // 에너미 캐스팅
-                    Vector2 tmpCenter = new Vector2(attackBoxCastCenter.x * direction, attackBoxCastCenter.y) + rb.position;
-                    tmpCenter = new Vector2(tmpCenter.x*direction,tmpCenter.y);
+                    Vector2 tmpCenter = new Vector2(attackBoxCastCenter.x * direction, attackBoxCastCenter.y) + rb.position; // 플레이어 중심 + 박스 중심
                     RaycastHit2D hit = Physics2D.BoxCast(tmpCenter,
                                                          attackBoxCastSize,
                                                          0,
@@ -380,21 +381,21 @@ public class PlayerController : MonoBehaviour
                 animator.Play("DashAttack");
                 isMoveable = false;
                 animationTimer = dashAttackTime;
-                Vector2 tmpCenter = new Vector2(attackBoxCastCenter.x * direction, attackBoxCastCenter.y) + rb.position;
-
-                hits = Physics2D.BoxCastAll(tmpCenter,
-                                                     attackBoxCastSize,
-                                                     0,
-                                                     Vector2.zero,
-                                                     1,
-                                                     enemyLayer);
-                attackState++;
+                dashAttackState++;
+                
+                
                 break;
             case DashAttackState.Casting:
                 if (animationTimer < dashAttackTime * (2 / 3))
                 {
                     // 에너미 캐스팅
-                    
+                    Vector2 tmpCenter = new Vector2(attackBoxCastCenter.x * direction, attackBoxCastCenter.y) + rb.position;
+                    hits = Physics2D.BoxCastAll(tmpCenter,
+                                                         attackBoxCastSize,
+                                                         0,
+                                                         Vector2.zero,
+                                                         1,
+                                                         enemyLayer);
 
                     foreach (var hit in hits)
                     {
@@ -406,12 +407,11 @@ public class PlayerController : MonoBehaviour
                                                                                attackKnockbackTime);
                         }
                     }
-                    move.x = 0;
+                    move.x = 3f;
                     dashAttackState++;
                 }
                 else
-                {
-                    move.x = direction * 3f;
+                { 
                     animationTimer -= Time.deltaTime;
                 }
                 break;
